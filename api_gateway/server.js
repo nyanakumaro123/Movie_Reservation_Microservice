@@ -20,25 +20,32 @@ app.use((req, res, next) => {
 });
 
 const checkRole = (allowedRole) => {
-    return (req, res, next) => {
-        const token = req.headers['authorization']; // Membaca token dari React
+    return async (req, res, next) => {
+        const token = req.headers['authorization']; // Mengambil Bearer Token dari React
 
         if (!token) {
             return res.status(401).json({ status: 'error', message: 'Akses ditolak. Token tidak ditemukan.' });
         }
 
-        // Validasi Token Admin
-        if (allowedRole === 'admin' && token === 'Bearer mock-token-admin-xyz') {
-            return next(); // Lolos ke Movie Service
-        }
-        
-        // Validasi Token User
-        if (allowedRole === 'user' && token === 'Bearer mock-token-user-abc') {
-            return next(); // Lolos ke Booking Service
-        }
+        try {
+            // Tembak langsung ke Laravel Auth Service untuk memeriksa apakah token ini valid
+            const response = await axios.get('http://auth-service.test/api/user', {
+                headers: { 'Authorization': token }
+            });
 
-        // Jika token tidak cocok dengan role yang diminta
-        return res.status(403).json({ status: 'error', message: 'Anda tidak memiliki akses ke halaman ini!' });
+            const user = response.data; // Data user hasil balikan Laravel
+
+            // Periksa apakah role user sesuai dengan yang diizinkan
+            if (user.role === allowedRole) {
+                req.user = user; // Simpan data user di request agar bisa dipakai rute selanjutnya
+                return next(); // Lolos ke service tujuan!
+            }
+
+            return res.status(403).json({ status: 'error', message: 'Anda tidak memiliki hak akses!' });
+
+        } catch (error) {
+            return res.status(401).json({ status: 'error', message: 'Token kedaluwarsa atau tidak valid.' });
+        }
     };
 };
 
