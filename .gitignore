@@ -1,0 +1,23 @@
+# ==========================================
+# 1. Mengabaikan Node.js Dependensi (Express Gateway & React Frontend)
+# ==========================================
+# Menggunakan **/ berarti: abaikan node_modules di folder manapun ia berada
+**/node_modules/
+**/package-lock.json
+
+# ==========================================
+# 2. Mengabaikan Composer Dependensi (Laravel Auth, Movie, Payment)
+# ==========================================
+**/vendor/
+.env
+.env.backup
+
+# ==========================================
+# 3. Mengabaikan File Log & Cache Sistem
+# ==========================================
+*.log
+.phpunit.result.cache
+/.vscode/
+/.idea/
+Thumbs.db
+.DS_Store
