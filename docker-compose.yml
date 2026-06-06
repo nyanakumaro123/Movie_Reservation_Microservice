@@ -1,0 +1,66 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: laravel_app
+    volumes:
+      - .:/var/www/html
+    ports:
+      - 8000:80
+    environment:
+      - DB_CONNECTION=pgsql
+      - DB_HOST=postgresdatabase
+      - DB_DATABASE=database_auth_movie
+      - DB_USERNAME=databaseku
+      - DB_PASSWORD=KmG4nt3ng
+    command: >
+      bash -c "
+      chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache &&
+      echo 'Menunggu database siap...' &&
+      sleep 3 &&
+      echo 'Menjalankan migrasi database...' &&
+      php artisan migrate --force &&
+      echo 'Migrasi selesai, menyalakan Apache...' &&
+      apache2-foreground
+      "
+    depends_on:
+      - postgresdatabase
+      - pgadmin
+    networks:
+      - bioskop-network
+
+  postgresdatabase:
+    image: postgres:16-alpine
+    container_name: postgres_db
+    restart: always
+    ports: 
+      - 5431:5432
+    environment:
+      - POSTGRES_DB=database_auth_movie
+      - POSTGRES_USER=databaseku
+      - POSTGRES_PASSWORD=KmG4nt3ng
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    networks:
+      - bioskop-network
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: postgres_pgadmin
+    restart: always
+    ports:
+      - 8081:80
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@example.com
+      - PGADMIN_DEFAULT_PASSWORD=KmG4nt3ng
+    depends_on:
+      - postgresdatabase
+    networks:
+      - bioskop-network
+
+networks:
+  bioskop-network:
+    external: true
+
+volumes:
+  postgres_data: 
