@@ -1,21 +1,29 @@
 FROM php:8.4-fpm
 
+# System deps
 RUN apt-get update && apt-get install -y \
-    git \
-    curl \
-    zip \
-    unzip \
-    libzip-dev \
-    libpng-dev
+    git curl zip unzip libzip-dev libpng-dev \
+    && rm -rf /var/lib/apt/lists/*
 
+# PHP extensions needed for Laravel + MySQL
 RUN docker-php-ext-install pdo pdo_mysql zip
 
+# Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www
 
+# Copy composer files first (layer cache: only re-installs if these change)
+COPY composer.json composer.lock ./
+RUN composer install --no-scripts --no-autoloader --no-interaction --prefer-dist
+
+# Copy the rest of the app
 COPY . .
 
-RUN composer install
+# Finish composer setup
+RUN composer dump-autoload --optimize
+
+# Storage permissions
+RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 
 CMD ["php-fpm"]

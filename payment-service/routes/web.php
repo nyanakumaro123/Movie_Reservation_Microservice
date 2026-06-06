@@ -2,20 +2,25 @@
 
 use Illuminate\Support\Facades\Route;
 
-// 1. Point the home directory directly to your checkout page
+/*
+|--------------------------------------------------------------------------
+| Web Routes — Payment Service
+|--------------------------------------------------------------------------
+| These serve the checkout UI (Blade views).
+| The actual payment API lives in routes/api.php.
+|--------------------------------------------------------------------------
+*/
+
+// Checkout page (dummy UI for demo / testing)
 Route::get('/', function () {
     return view('checkout');
 })->name('home');
 
-// 2. Dedicated checkout URL
 Route::get('/checkout', function () {
     return view('checkout');
 })->name('checkout.index');
 
-// 3. Receives background notifications from Midtrans
-Route::post('/midtrans/callback', [CheckoutController::class, 'callback'])->name('checkout.callback');
-
-// 4. The landing page AFTER you click the fake payment button
+// Success landing page
 Route::get('/payment-success', function () {
-    return "<h1>🎉 Payment Success! Your seats are reserved.</h1>";
-});
+    return view('payment-success');
+})->name('payment.success');
