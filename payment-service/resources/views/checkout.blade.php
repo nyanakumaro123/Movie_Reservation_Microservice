@@ -1,114 +1,157 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="en">
 
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Movie Reservation Checkout</title>
-
-    @fonts
-
-    @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @else
-        <script src="https://cdn.tailwindcss.com"></script>
-    @endif
-
-    <script type="text/javascript" src="https://app.sandbox.midtrans.com/snap/snap.js"
-        data-client-key="{{ env('MIDTRANS_CLIENT_KEY') }}"></script>
+    <title>Movie Reservation — Checkout</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body
-    class="bg-[#FDFDFC] dark:bg-[#0a0a0a] text-[#1b1b18] flex p-6 lg:p-8 items-center lg:justify-center min-h-screen flex-col">
+<body class="bg-gray-950 text-gray-100 min-h-screen flex items-center justify-center p-6">
 
-    <div
-        class="flex items-center justify-center w-full transition-opacity opacity-100 duration-750 lg:grow starting:opacity-0">
-        <main
-            class="flex max-w-[335px] w-full flex-col-reverse lg:max-w-4xl lg:flex-row shadow-lg rounded-lg overflow-hidden">
+    <main class="flex max-w-4xl w-full flex-col lg:flex-row shadow-2xl rounded-2xl overflow-hidden">
 
-            <div class="flex-1 p-6 pb-6 lg:p-12 bg-white dark:bg-[#161615] dark:text-[#EDEDEC]">
-                <h1 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Order Summary</h1>
+        {{-- ── Left: Order Summary ── --}}
+        <div class="flex-1 p-8 lg:p-12 bg-gray-900">
+            <h1 class="text-2xl font-bold mb-6 text-white">Order Summary</h1>
 
-                <div class="space-y-4 mb-8">
-                    <div class="flex justify-between border-b dark:border-gray-700 pb-4">
-                        <div>
-                            <h3 class="font-semibold text-lg">Cyberpunk 2077: Edge of the Web</h3>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">Sun, 24 March 2026 • 19:30 WIB</p>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">Studio 2 • Seats: F10, F11</p>
-                        </div>
-                    </div>
-
-                    <div class="flex justify-between items-center text-sm">
-                        <span class="text-gray-600 dark:text-gray-400">Tickets (2x)</span>
-                        <span class="font-medium">Rp 120.000</span>
-                    </div>
-                    <div class="flex justify-between items-center text-sm">
-                        <span class="text-gray-600 dark:text-gray-400">Convenience Fee</span>
-                        <span class="font-medium">Rp 0</span>
-                    </div>
-
-                    <div class="flex justify-between items-center pt-4 border-t dark:border-gray-700 mt-4">
-                        <span class="font-bold text-lg">Total Payment</span>
-                        <span class="font-bold text-lg text-[#F53003]">Rp 120.000</span>
-                    </div>
-                </div>
-
-                <button id="pay-button"
-                    class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#F53003] hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors">
-                    Pay with Midtrans
-                </button>
-                <p class="text-xs text-center text-gray-500 mt-4">
-                    Secure payment processed via Midtrans.
-                </p>
+            {{-- Movie Details --}}
+            <div class="border-b border-gray-700 pb-5 mb-5">
+                <h3 class="font-semibold text-lg text-white" id="movie-title">Cyberpunk 2077: Edge of the Web</h3>
+                <p class="text-sm text-gray-400 mt-1" id="movie-schedule">Sun, 24 March 2026 • 19:30 WIB</p>
+                <p class="text-sm text-gray-400" id="movie-seats">Studio 2 • Seats: F10, F11</p>
             </div>
 
-            <div
-                class="bg-gray-900 relative lg:-ml-px -mb-px lg:mb-0 aspect-video lg:aspect-auto w-full lg:w-[438px] shrink-0 overflow-hidden flex items-center justify-center">
-                <img src="https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=1000&auto=format&fit=crop"
-                    alt="Movie Poster" class="absolute inset-0 w-full h-full object-cover opacity-70 mix-blend-overlay">
-
-                <div class="relative z-10 text-center p-8">
-                    <div class="inline-block p-4 rounded-full bg-white/10 backdrop-blur-md mb-4 border border-white/20">
-                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z">
-                            </path>
-                        </svg>
-                    </div>
-                    <h2 class="text-2xl font-bold text-white tracking-wider uppercase">Cinema TIX</h2>
+            {{-- Price Breakdown --}}
+            <div class="space-y-3 mb-6">
+                <div class="flex justify-between text-sm text-gray-400">
+                    <span id="ticket-label">Tickets (2x)</span>
+                    <span id="ticket-price">Rp 120.000</span>
+                </div>
+                <div class="flex justify-between text-sm text-gray-400">
+                    <span>Convenience Fee</span>
+                    <span>Rp 0</span>
+                </div>
+                <div class="flex justify-between font-bold text-lg pt-4 border-t border-gray-700 text-white">
+                    <span>Total Payment</span>
+                    <span class="text-red-400" id="total-price">Rp 120.000</span>
                 </div>
             </div>
 
-        </main>
-    </div>
+            {{-- Payment Method --}}
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-400 mb-2">Payment Method</label>
+                <select id="payment-method"
+                    class="w-full bg-gray-800 border border-gray-600 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500">
+                    <option value="CREDIT_CARD">💳 Credit Card</option>
+                    <option value="DEBIT_CARD">💳 Debit Card</option>
+                    <option value="BANK_TRANSFER">🏦 Bank Transfer</option>
+                    <option value="E_WALLET">📱 E-Wallet</option>
+                    <option value="CASH">💵 Cash</option>
+                </select>
+            </div>
 
-    <script type="text/javascript">
-        var payButton = document.getElementById('pay-button');
+            {{-- Card Last 4 (shown only for card methods) --}}
+            <div id="card-section" class="mb-6">
+                <label class="block text-sm font-medium text-gray-400 mb-2">
+                    Card Last 4 Digits
+                    <span class="text-gray-600 font-normal">(enter 0000 to simulate a declined card)</span>
+                </label>
+                <input id="card-last4" type="text" maxlength="4" placeholder="e.g. 1234"
+                    class="w-full bg-gray-800 border border-gray-600 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500" />
+            </div>
 
-        payButton.addEventListener('click', function(e) {
-            e.preventDefault();
+            {{-- Status Message --}}
+            <div id="status-message" class="hidden mb-4 p-3 rounded-lg text-sm font-medium"></div>
 
-            // 🎯 RUNNING MOCK FLOW (Use this while testing offline without real keys)
-            alert("🎯 Mock Mode: Simulating Midtrans Payment Popup...");
+            {{-- Pay Button --}}
+            <button id="pay-button"
+                class="w-full py-3 px-4 rounded-xl text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition-all focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                Pay Now (Demo)
+            </button>
 
-            setTimeout(function() {
-                alert("✅ Mock Payment Successful! Redirecting...");
-                window.location.href = "/payment-success";
-            }, 1000);
+            <p class="text-xs text-center text-gray-600 mt-4">
+                Dummy payment flow — no real money is charged.
+            </p>
+        </div>
 
-            window.snap.pay('{{ $snapToken ?? '' }}', {
-                onSuccess: function(result) {
-                    window.location.href = "/payment-success";
-                },
-                onPending: function(result) {
-                    alert("Waiting for your payment!");
-                },
-                onError: function(result) {
-                    alert("Payment failed!");
+        {{-- ── Right: Cinema Branding ── --}}
+        <div class="bg-gray-950 relative lg:w-[380px] shrink-0 overflow-hidden flex items-center justify-center min-h-[220px]">
+            <img src="https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=1000&auto=format&fit=crop"
+                alt="Movie Poster" class="absolute inset-0 w-full h-full object-cover opacity-40">
+            <div class="relative z-10 text-center p-8">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white/10 backdrop-blur-md mb-4 border border-white/20">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
+                    </svg>
+                </div>
+                <h2 class="text-2xl font-bold text-white tracking-widest uppercase">Cinema TIX</h2>
+                <p class="text-gray-400 text-sm mt-2">Secure • Fast • Easy</p>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        const methodSelect  = document.getElementById('payment-method');
+        const cardSection   = document.getElementById('card-section');
+        const payButton     = document.getElementById('pay-button');
+        const statusMsg     = document.getElementById('status-message');
+
+        // Show/hide card field based on method
+        methodSelect.addEventListener('change', () => {
+            const isCard = ['CREDIT_CARD', 'DEBIT_CARD'].includes(methodSelect.value);
+            cardSection.style.display = isCard ? 'block' : 'none';
+        });
+
+        // ── Dummy payment flow ────────────────────────────────────────────
+        payButton.addEventListener('click', async () => {
+            payButton.disabled = true;
+            payButton.textContent = 'Processing...';
+            statusMsg.className = 'hidden mb-4 p-3 rounded-lg text-sm font-medium';
+
+            const orderId   = 'BOOK-' + Date.now();
+            const amount    = 120000;
+            const method    = methodSelect.value;
+            const card_last4 = document.getElementById('card-last4').value || null;
+
+            try {
+                const response = await fetch('/api/payments/charge', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
+                    },
+                    body: JSON.stringify({ order_id: orderId, amount, method, card_last4 }),
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    statusMsg.textContent = '✅ ' + data.message;
+                    statusMsg.className = 'mb-4 p-3 rounded-lg text-sm font-medium bg-green-900 text-green-300';
+
+                    setTimeout(() => {
+                        window.location.href = '/payment-success?order_id=' + orderId;
+                    }, 1200);
+                } else {
+                    statusMsg.textContent = '❌ ' + data.message;
+                    statusMsg.className = 'mb-4 p-3 rounded-lg text-sm font-medium bg-red-900 text-red-300';
+                    payButton.disabled = false;
+                    payButton.textContent = 'Try Again';
                 }
-            });
+
+            } catch (err) {
+                statusMsg.textContent = '⚠️ Network error. Check if the service is running.';
+                statusMsg.className = 'mb-4 p-3 rounded-lg text-sm font-medium bg-yellow-900 text-yellow-300';
+                payButton.disabled = false;
+                payButton.textContent = 'Try Again';
+            }
         });
     </script>
-</body>
 
+</body>
 </html>
