@@ -10,13 +10,22 @@ return new class extends Migration
     {
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
-            $table->string('order_id')->unique();           // reservation/booking ID from booking-service
-            $table->decimal('amount', 12, 2);               // payment amount in IDR
-            $table->string('status')->default('pending');   // pending | success | failed | expired | refunded
-            $table->string('snap_token')->nullable();       // dummy token (or real Midtrans token later)
-            $table->string('method')->nullable();           // CREDIT_CARD | DEBIT_CARD | BANK_TRANSFER | E_WALLET | CASH
-            $table->string('user_id')->nullable();          // user reference from user/auth service
-            $table->string('card_last4')->nullable();       // last 4 digits of card (dummy)
+
+            $table->string('order_id')->unique();           
+            $table->decimal('amount', 12, 2);
+
+            // Existing payment status
+            $table->string('status')->default('pending');
+
+            // New payment_status field
+            $table->string('payment_status')->default('unpaid');
+            // unpaid | paid | failed | refunded
+
+            $table->string('snap_token')->nullable();
+            $table->string('method')->nullable();
+            $table->string('user_id')->nullable();
+            $table->string('card_last4')->nullable();
+
             $table->timestamps();
         });
     }
