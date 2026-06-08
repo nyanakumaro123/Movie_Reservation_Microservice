@@ -23,7 +23,8 @@ class PaymentController extends Controller
      *   "card_last4" : "1234",             // optional — for card methods
      *   "user_id"    : "USER-42"           // optional — for reference
      * }
-     
+     */
+
     public function charge(Request $request)
     {
         $request->validate([
@@ -41,15 +42,15 @@ class PaymentController extends Controller
         // ─────────────────────────────────────────────────────────────────
 
         $payment = Payment::create([
-            'order_id'   => $request->order_id,
-            'amount'     => $request->amount,
-            'status'     => $status,
-            'snap_token' => $snap_token,
-            'method'     => $request->method,
-            'user_id'    => $request->user_id,
-            'card_last4' => $request->card_last4,
+            'order_id'      => $request->order_id,
+            'amount'        => $request->amount,
+            'status'        => $status,
+            'payment_status' => $status === 'success' ? 'paid' : 'unpaid',
+            'snap_token'    => $snap_token,
+            'method'        => $request->method,
+            'user_id'       => $request->user_id,
+            'card_last4'    => $request->card_last4,
         ]);
-
         if ($declined) {
             return response()->json([
                 'success' => false,
@@ -96,7 +97,7 @@ class PaymentController extends Controller
             default                             => 'failed',
         };
 
-        $payment->update(['status' => $status]);
+        $payment->update(['status' => $status, 'payment_status' => $status === 'success' ? 'paid' : 'unpaid']);
 
         return response()->json([
             'success' => true,
@@ -170,7 +171,7 @@ class PaymentController extends Controller
             ], 400);
         }
 
-        $payment->update(['status' => 'refunded']);
+        $payment->update(['status' => 'refunded', 'payment_status' => 'refunded']);
 
         return response()->json([
             'success' => true,
