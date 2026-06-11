@@ -30,11 +30,7 @@ class PaymentSeeder extends Seeder
             'user_id' => 'USER-2',
             'card_last4' => '0000',
         ]);
-
-        // Call additional seeders if present
-        $this->call([
-            PaymentSeeder::class,
-        ]);
+        
+        // Removed the recursive $this->call() block!
     }
-
 }

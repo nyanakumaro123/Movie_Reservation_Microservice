@@ -2,15 +2,15 @@ version: '3.9'
 
 services:
 
-  # 1. API GATEWAY (Entry Point)
+  # 1. EXPRESS.JS API GATEWAY (Entry Point)
   api-gateway:
-    image: nginx:alpine
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
     container_name: api-gateway
     restart: unless-stopped
     ports:
-      - "8003:80"
-    volumes:
-      - ./gateway/nginx.conf:/etc/nginx/conf.d/default.conf
+      - "8003:3000" # Maps local port 8003 to Express internal port 3000
     networks:
       - microservice-network
     depends_on:
@@ -47,7 +47,6 @@ services:
     image: nginx:latest
     container_name: payment-nginx
     restart: unless-stopped
-    # Ports removed here because all traffic now flows through the gateway
     volumes:
       - ./payment-service:/var/www
       - ./payment-service/docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
