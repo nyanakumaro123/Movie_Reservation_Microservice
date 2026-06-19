@@ -1,0 +1,59 @@
+services:
+  booking-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: booking_express_app
+    restart: always
+    ports:
+      - "9000:9000"
+    environment:
+      - PORT=9000
+      - DB_HOST=mysql2database
+      - DB_PORT=3306
+      - DB_USER=root
+      - DB_PASSWORD=
+      - DB_NAME=database_booking_movie
+      - INVENTORY_SERVICE_URL=http://inventory_laravel_app:80
+    depends_on:
+      - mysql2database
+      - mysql2phpmyadmin
+    networks:
+      - bioskop-network
+  
+  mysql2database:
+    image: mysql
+    container_name: mysql2_db
+    restart: always
+    ports: 
+      - 3304:3306
+    environment:
+      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+      - MYSQL_DATABASE=database_booking_movie
+    volumes:
+      - mysql2_data:/var/lib/mysql
+    networks:
+      - bioskop-network
+  mysql2phpmyadmin:
+    image: phpmyadmin
+    container_name: mysql2_phpmyadmin
+    restart: always
+    ports:
+      - 8083:80
+    environment:
+      - PMA_HOST=mysql2database
+      - PMA_PORT=3306
+      - PMA_USER=root
+      - PMA_PASSWORD=
+      - PMA_ARBITRARY=1
+    depends_on:
+      - mysql2database
+    networks:
+      - bioskop-network
+
+networks:
+  bioskop-network:
+    external: true
+
+volumes:
+  mysql2_data:
