@@ -16,12 +16,26 @@ services:
       - DB_PASSWORD=KmG4nt3ng
     command: >
       bash -c "
-      chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache &&
-      echo 'Menunggu database siap...' &&
-      sleep 3 &&
+      echo 'Mengamankan permission folder writable di Mac...' &&
+      chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache &&
+      
+      echo 'Menunggu database PostgreSQL siap...' &&
+      until pg_isready -h postgresdatabase -p 5432 -U databaseku; do
+        echo 'Database belum siap, menunggu...'
+        sleep 2
+      done &&
+      
       echo 'Menjalankan migrasi database...' &&
       php artisan migrate --force &&
-      echo 'Migrasi selesai, menyalakan Apache...' &&
+      
+      echo 'Menjalankan seeder database...' &&
+      php artisan db:seed --force &&
+      
+      echo 'Optimasi cache Laravel...' &&
+      php artisan config:clear &&
+      php artisan view:clear &&
+      
+      echo 'Semua sistem siap! Menyalakan Apache...' &&
       apache2-foreground
       "
     depends_on:
