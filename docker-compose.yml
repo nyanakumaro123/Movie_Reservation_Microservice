@@ -1,0 +1,81 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: inventory_laravel_app
+    volumes:
+      - .:/var/www/html
+    ports:
+      - 8001:80
+    environment:
+      - DB_CONNECTION=mysql
+      - DB_HOST=mysqldatabase
+      - DB_DATABASE=database_inventory_movie
+      - DB_USERNAME=root
+      - DB_PASSWORD=
+    command: >
+      bash -c "
+      echo 'Mengatur permission folder...' &&
+      chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache &&
+      
+      echo 'Menunggu port database MySQL (3306) siap...' &&
+      until nc -z -v -w3 mysqldatabase 3306; do
+        echo 'Port MySQL belum merespons, menunggu 2 detik...'
+        sleep 2
+      done &&
+      
+      echo 'Mencoba menjalankan migrasi database...' ;
+      php artisan migrate --force ;
+
+      echo 'Menjalankan seeder database...' &&
+      php artisan db:seed --force &&
+      
+      echo 'Clear cache...' ;
+      php artisan config:clear ;
+      php artisan view:clear ;
+      
+      echo 'Menyalakan Apache Web Server...' &&
+      apache2-foreground
+      "
+    depends_on:
+      - mysqldatabase
+      - mysqlphpmyadmin
+    networks:
+      - bioskop-network
+  mysqldatabase:
+    image: mysql
+    container_name: mysql_db
+    restart: always
+    ports: 
+      - 3305:3306
+    environment:
+      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+      - MYSQL_DATABASE=database_inventory_movie
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - bioskop-network
+  mysqlphpmyadmin:
+    image: phpmyadmin
+    container_name: mysql_phpmyadmin
+    restart: always
+    ports:
+      - 8082:80
+    environment:
+      - PMA_HOST=mysqldatabase
+      - PMA_PORT=3306
+      - PMA_USER=root
+      - PMA_PASSWORD=
+      - PMA_ARBITRARY=1
+    depends_on:
+      - mysqldatabase
+    networks:
+      - bioskop-network
+
+networks:
+  bioskop-network:
+    external: true
+
+volumes:
+  mysql_data:
