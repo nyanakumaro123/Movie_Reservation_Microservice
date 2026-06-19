@@ -3,37 +3,31 @@ import axios from 'axios';
 
 const API_GATEWAY = 'http://localhost:8080';
 
+// Status kursi — tanpa hover/klik karena hanya view
 const statusStyle = {
-  available: 'bg-green-500 hover:bg-green-400 cursor-pointer text-white',
-  locked:    'bg-yellow-400 cursor-not-allowed text-gray-800',
-  booked:    'bg-red-500 cursor-not-allowed text-white opacity-60',
+  available: 'bg-green-500 text-white',
+  locked:    'bg-yellow-400 text-gray-800',
+  booked:    'bg-red-500 text-white opacity-60',
 };
 
-export default function InventoryPage({ token }) {
-  const [showtimes, setShowtimes] = useState([]);
-  const [selected, setSelected]   = useState(null);
-  const [seats, setSeats]         = useState([]);
-  const [showtime, setShowtime]   = useState(null);
-  const [loading, setLoading]     = useState(false);
-  const [message, setMessage]     = useState('');
-
-  // Filter tanggal
+export default function MovieListPage() {
+  const [showtimes, setShowtimes]   = useState([]);
+  const [selected, setSelected]     = useState(null);
+  const [seats, setSeats]           = useState([]);
+  const [showtime, setShowtime]     = useState(null);
+  const [loading, setLoading]       = useState(false);
+  const [message, setMessage]       = useState('');
   const [filterDate, setFilterDate] = useState('');
 
-  // Ambil semua jadwal tayang saat halaman dibuka
   useEffect(() => {
     axios.get(`${API_GATEWAY}/inventory/showtimes`)
       .then(r => {
         setShowtimes(r.data);
-        // Set filter ke tanggal pertama yang ada
-        if (r.data.length > 0) {
-          setFilterDate(r.data[0].show_date);
-        }
+        if (r.data.length > 0) setFilterDate(r.data[0].show_date);
       })
-      .catch(() => setMessage('❌ Gagal memuat jadwal tayang. Pastikan backend berjalan.'));
+      .catch(() => setMessage('❌ Gagal memuat jadwal tayang.'));
   }, []);
 
-  // Ambil kursi saat user klik jadwal
   const loadSeats = async (showtimeId) => {
     setSelected(showtimeId);
     setLoading(true);
@@ -51,35 +45,14 @@ export default function InventoryPage({ token }) {
     }
   };
 
-  // Klik kursi → lock
-  const handleSeatClick = async (seat) => {
-    if (seat.status !== 'available') return;
-    try {
-      const r = await axios.post(`${API_GATEWAY}/inventory/seats/lock`, {
-        showtime_id: selected,
-        seat_id:     seat.seat_id,
-      }, { headers: { Authorization: `Bearer ${token}` } });
-      setMessage(`✅ ${r.data.message} — Kursi ${seat.label}`);
-      loadSeats(selected);
-    } catch (err) {
-      setMessage(`❌ ${err.response?.data?.message || 'Gagal mengunci kursi'}`);
-    }
-  };
-
-  // Ambil daftar tanggal unik dari showtimes
-  const uniqueDates = [...new Set(showtimes.map(st => st.show_date))].sort();
-
-  // Filter showtimes berdasarkan tanggal yang dipilih
+  const uniqueDates       = [...new Set(showtimes.map(st => st.show_date))].sort();
   const filteredShowtimes = showtimes.filter(st => st.show_date === filterDate);
-
-  // Grup kursi per baris
-  const rows = seats.reduce((acc, seat) => {
+  const rows              = seats.reduce((acc, seat) => {
     if (!acc[seat.row]) acc[seat.row] = [];
     acc[seat.row].push(seat);
     return acc;
   }, {});
 
-  // Hitung ringkasan kursi
   const totalSeats     = seats.length;
   const availableSeats = seats.filter(s => s.status === 'available').length;
   const lockedSeats    = seats.filter(s => s.status === 'locked').length;
@@ -87,19 +60,17 @@ export default function InventoryPage({ token }) {
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
-      <h2 className="text-xl font-bold mb-1 text-white">🎬 Jadwal Tayang</h2>
-      <p className="text-gray-400 text-sm mb-6">Pilih jadwal lalu klik kursi untuk menguncinya.</p>
+      <h2 className="text-xl font-bold mb-1 text-white">🎬 Jadwal Film</h2>
+      <p className="text-gray-400 text-sm mb-6">Lihat jadwal tayang dan posisi kursi yang tersedia.</p>
 
-      {/* ── Filter Tanggal ── */}
+      {/* Filter Tanggal */}
       <div className="flex gap-2 flex-wrap mb-4">
         {uniqueDates.map(date => (
           <button
             key={date}
             onClick={() => { setFilterDate(date); setSelected(null); setSeats([]); setShowtime(null); }}
             className={`px-3 py-1 rounded-full text-xs font-semibold transition ${
-              filterDate === date
-                ? 'bg-indigo-500 text-white'
-                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              filterDate === date ? 'bg-indigo-500 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
             }`}
           >
             {new Date(date + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' })}
@@ -107,7 +78,7 @@ export default function InventoryPage({ token }) {
         ))}
       </div>
 
-      {/* ── Daftar Showtimes ── */}
+      {/* Daftar Showtimes */}
       {filteredShowtimes.length === 0 ? (
         <p className="text-gray-500 text-sm">Tidak ada jadwal untuk tanggal ini.</p>
       ) : (
@@ -117,9 +88,7 @@ export default function InventoryPage({ token }) {
               key={st.id}
               onClick={() => loadSeats(st.id)}
               className={`text-left p-4 rounded-xl border transition ${
-                selected === st.id
-                  ? 'border-indigo-500 bg-indigo-900'
-                  : 'border-gray-600 bg-gray-800 hover:border-gray-400'
+                selected === st.id ? 'border-indigo-500 bg-indigo-900' : 'border-gray-600 bg-gray-800 hover:border-gray-400'
               }`}
             >
               <p className="font-semibold text-white text-sm leading-snug">{st.movie_title}</p>
@@ -136,27 +105,18 @@ export default function InventoryPage({ token }) {
         </div>
       )}
 
-      {/* ── Pesan Feedback ── */}
-      {message && (
-        <div className="mb-4 p-3 bg-gray-700 rounded-lg text-sm text-white">{message}</div>
-      )}
-
-      {/* ── Loading ── */}
+      {message && <div className="mb-4 p-3 bg-gray-700 rounded-lg text-sm text-white">{message}</div>}
       {loading && <p className="text-gray-400 text-sm">Memuat denah kursi...</p>}
 
-      {/* ── Denah Kursi ── */}
+      {/* Denah Kursi — hanya lihat, tidak bisa diklik */}
       {!loading && showtime && (
         <div className="bg-gray-800 rounded-xl p-5">
-
-          {/* Info jadwal */}
           <div className="mb-4">
             <h3 className="text-lg font-semibold text-white">{showtime.movie_title}</h3>
-            <p className="text-gray-400 text-sm">
-              {showtime.studio_name} · {showtime.seat_type} · {showtime.show_time}
-            </p>
+            <p className="text-gray-400 text-sm">{showtime.studio_name} · {showtime.seat_type} · {showtime.show_time}</p>
           </div>
 
-          {/* Ringkasan kursi */}
+          {/* Ringkasan */}
           <div className="flex gap-4 mb-4 text-xs text-gray-400">
             <span>Total: <strong className="text-white">{totalSeats}</strong></span>
             <span className="text-green-400">Tersedia: <strong>{availableSeats}</strong></span>
@@ -166,59 +126,37 @@ export default function InventoryPage({ token }) {
 
           {/* Legenda */}
           <div className="flex gap-4 mb-5 text-xs">
-            <span className="flex items-center gap-1.5">
-              <span className="w-4 h-4 rounded bg-green-500 inline-block"/>
-              <span className="text-gray-300">Tersedia</span>
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-4 h-4 rounded bg-yellow-400 inline-block"/>
-              <span className="text-gray-300">Dikunci</span>
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-4 h-4 rounded bg-red-500 inline-block"/>
-              <span className="text-gray-300">Terjual</span>
-            </span>
+            <span className="flex items-center gap-1.5"><span className="w-4 h-4 rounded bg-green-500 inline-block"/><span className="text-gray-300">Tersedia</span></span>
+            <span className="flex items-center gap-1.5"><span className="w-4 h-4 rounded bg-yellow-400 inline-block"/><span className="text-gray-300">Dikunci</span></span>
+            <span className="flex items-center gap-1.5"><span className="w-4 h-4 rounded bg-red-500 inline-block"/><span className="text-gray-300">Terjual</span></span>
           </div>
 
           {/* Layar */}
           <div className="w-full text-center mb-6">
-            <div className="inline-block bg-gray-600 text-gray-300 text-xs px-8 py-1 rounded">
-              LAYAR
-            </div>
+            <div className="inline-block bg-gray-600 text-gray-300 text-xs px-8 py-1 rounded">LAYAR</div>
           </div>
 
-          {/* Grid kursi */}
+          {/* Grid kursi — disabled semua, hanya tampilan */}
           <div className="space-y-2">
             {Object.entries(rows).map(([row, rowSeats]) => (
               <div key={row} className="flex items-center gap-2">
                 <span className="text-gray-500 font-mono text-xs w-4">{row}</span>
                 <div className="flex gap-1 flex-wrap">
                   {rowSeats.map(seat => (
-                    <button
+                    <div
                       key={seat.seat_id}
-                      onClick={() => handleSeatClick(seat)}
-                      disabled={seat.status !== 'available'}
-                      className={`w-8 h-8 rounded text-xs font-bold transition ${statusStyle[seat.status]}`}
-                      title={
-                        seat.status === 'locked'
-                          ? `Dikunci hingga ${seat.locked_until}`
-                          : seat.status === 'booked'
-                          ? 'Sudah terjual'
-                          : `Klik untuk kunci kursi ${seat.label}`
-                      }
+                      className={`w-8 h-8 rounded text-xs font-bold flex items-center justify-center ${statusStyle[seat.status]}`}
+                      title={seat.status === 'available' ? `Kursi ${seat.label} tersedia` : seat.status === 'locked' ? 'Sedang dikunci' : 'Sudah terjual'}
                     >
                       {seat.number}
-                    </button>
+                    </div>
                   ))}
                 </div>
               </div>
             ))}
           </div>
 
-          <button
-            onClick={() => loadSeats(selected)}
-            className="mt-5 text-xs text-indigo-400 hover:underline"
-          >
+          <button onClick={() => loadSeats(selected)} className="mt-5 text-xs text-indigo-400 hover:underline">
             🔄 Refresh status kursi
           </button>
         </div>

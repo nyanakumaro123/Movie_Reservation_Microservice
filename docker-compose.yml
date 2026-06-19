@@ -1,0 +1,15 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: react_frontend
+    ports:
+      - "5173:5173" # Akses langsung lewat port default Vite
+    tty: true
+    networks:
+      - bioskop-network
+
+networks:
+  bioskop-network:
+    external: true

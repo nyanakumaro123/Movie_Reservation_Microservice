@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import axios from 'axios';
 
-const API_GATEWAY = "http://localhost:3000";
+const API_GATEWAY = "http://localhost:8080";
 
 export default function AuthPage({ onLoginSuccess }) {
   const [isRegister, setIsRegister] = useState(false); // Switcher halaman
